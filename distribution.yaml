@@ -1,10 +1,12 @@
 name: pgra
-version: 0.2.0
-description: "An isolated Hermes profile with a SQLite research state engine, programme CLI, evidence lineage, belief revision, bounded cycles, and paired evaluation."
+version: 0.3.0
+description: "An isolated Hermes profile with rebuildable SQLite research state, provenance-aware evidence, bounded programmes, recovery tools, and paired evaluation."
 hermes_requires: ">=0.21.6"
 author: "moslembabaee"
 distribution_owned:
   - README.md
+  - CHANGELOG.md
+  - LICENSE
   - AGENTS.md
   - SOUL.md
   - config.yaml
@@ -17,9 +19,11 @@ distribution_owned:
   - runtime/pgra/evaluation.py
   - runtime/pgra/service.py
   - runtime/pgra/migrations/001_initial.sql
+  - runtime/pgra/migrations/002_consumer_hardening.sql
   - pgra.py
   - tests/test_cross_session_cli.py
   - tests/test_evaluation.py
   - tests/test_evidence_and_beliefs.py
   - tests/test_state_engine.py
   - tests/test_full_cli_workflow.py
+  - tests/test_consumer_hardening.py

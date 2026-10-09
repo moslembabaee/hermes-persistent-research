@@ -17,28 +17,36 @@ REQUIRED_FILES = {
     ".env.EXAMPLE",
     "AGENTS.md",
     "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "skills/pgra-research/SKILL.md",
     "docs/PGRA_DESIGN.md",
     "docs/IMPLEMENTATION_PLAN.md",
     "docs/HERMES_DEFAULT_PROMPT.md",
     "docs/HANDOFF_BRIEF.md",
     "docs/CLI_REFERENCE.md",
+    "docs/CONSUMER_HARDENING_PLAN.md",
+    "docs/BACKUP_AND_RECOVERY.md",
     "runtime/pgra/__init__.py",
     "runtime/pgra/db.py",
     "runtime/pgra/service.py",
     "runtime/pgra/evaluation.py",
     "runtime/pgra/cli.py",
     "runtime/pgra/migrations/001_initial.sql",
+    "runtime/pgra/migrations/002_consumer_hardening.sql",
     "pgra.py",
     "tests/test_cross_session_cli.py",
     "tests/test_state_engine.py",
     "tests/test_evidence_and_beliefs.py",
     "tests/test_evaluation.py",
     "tests/test_full_cli_workflow.py",
+    "tests/test_consumer_hardening.py",
 }
 
 REQUIRED_OWNED = {
     "AGENTS.md",
+    "CHANGELOG.md",
+    "LICENSE",
     "SOUL.md",
     "config.yaml",
     ".env.EXAMPLE",
@@ -50,12 +58,14 @@ REQUIRED_OWNED = {
     "runtime/pgra/evaluation.py",
     "runtime/pgra/service.py",
     "runtime/pgra/migrations/001_initial.sql",
+    "runtime/pgra/migrations/002_consumer_hardening.sql",
     "pgra.py",
     "tests/test_cross_session_cli.py",
     "tests/test_evaluation.py",
     "tests/test_evidence_and_beliefs.py",
     "tests/test_state_engine.py",
     "tests/test_full_cli_workflow.py",
+    "tests/test_consumer_hardening.py",
 }
 
 PRIVATE_PARTS = {".pgra", ".hermes", "sessions", "memories", "cookies", "data", "runs", "research-state"}
@@ -162,6 +172,21 @@ def validate_env_example(root: Path) -> list[str]:
     return errors
 
 
+def validate_version_consistency(root: Path) -> list[str]:
+    manifest = (root / "distribution.yaml").read_text(encoding="utf-8-sig")
+    version = top_level_scalar(manifest, "version")
+    if not version:
+        return ["distribution version is unavailable"]
+    runtime = (root / "runtime/pgra/__init__.py").read_text(encoding="utf-8-sig")
+    skill = (root / "skills/pgra-research/SKILL.md").read_text(encoding="utf-8-sig")
+    errors = []
+    if f'__version__ = "{version}"' not in runtime:
+        errors.append("runtime version does not match distribution version")
+    if top_level_scalar(skill.split("---", 2)[1], "version") != version:
+        errors.append("skill version does not match distribution version")
+    return errors
+
+
 def validate_public_files(root: Path) -> list[str]:
     errors: list[str] = []
     files = tracked_files(root)
@@ -207,6 +232,7 @@ def audit(root: Path) -> list[str]:
     errors.extend(validate_manifest(root))
     errors.extend(validate_skill(root))
     errors.extend(validate_env_example(root))
+    errors.extend(validate_version_consistency(root))
     errors.extend(validate_public_files(root))
     errors.extend(validate_markdown_links(root))
     return errors

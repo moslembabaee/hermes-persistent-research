@@ -1,12 +1,14 @@
 # PGRA CLI reference
 
-The runtime uses only the Python standard library. Run it from the installed profile root:
+The runtime requires Python 3.10 or newer and uses only the standard library. Run it from the installed profile root:
 
 ```bash
 python pgra.py --help
+python pgra.py --version
+python pgra.py doctor
 ```
 
-State defaults to `$HERMES_HOME/pgra/pgra.sqlite3`. Override it with `PGRA_DB` or the global `--db PATH` option. Every command emits JSON; preserve returned IDs for later commands.
+State defaults to `.pgra/pgra.sqlite3` inside the installed profile, derived from the runtime file location. Override it with `PGRA_DB` or the global `--db PATH` option. Every command emits JSON; preserve returned IDs for later commands.
 
 ## Initialize and inspect
 
@@ -15,9 +17,12 @@ python pgra.py init
 python pgra.py integrity
 python pgra.py programme list
 python pgra.py programme show <slug-or-programme-id>
+python pgra.py programme summary <slug-or-programme-id>
+python pgra.py programme report <programme> --output .pgra/exports/report.md
+python pgra.py programme export <programme> --output .pgra/exports/export.json
 ```
 
-`integrity` checks SQLite integrity, foreign keys, contiguous event streams, projection stream versions, event JSON, and event payload hashes.
+`integrity` checks SQLite integrity, foreign keys, contiguous event streams, event JSON/hashes, local artifact hashes, and projection drift.
 
 ## Programme lifecycle
 
@@ -42,6 +47,8 @@ python pgra.py cycle checkpoint <programme> --cycle <cycle-id> \
 
 Only one cycle may be running per programme. A paused/blocked/completed/cancelled/archived programme cannot start a cycle until explicitly returned to `active` where allowed.
 
+Supported budget keys are `max_cycles`, `max_sources`, `max_evidence`, `max_experiments`, `max_minutes`, `max_runs`, `max_cost_usd`, and `max_tool_calls`. The current runtime enforces cycle, source, evidence, and experiment counts. Time, cost, and tool-call values are recorded for a future live Hermes adapter and are not claimed as metered today.
+
 ## Hypotheses and claims
 
 ```bash
@@ -59,6 +66,8 @@ python pgra.py source snapshot <programme> <source-id> --observed-uri <https-url
 python pgra.py lineage link <programme> <parent-source-id> <child-source-id> \
   --relation mirror --rationale "Republished from the parent"
 ```
+
+Available and partial snapshots require an exact locator and a 64-character SHA-256 hash. Add `--access-method`, `--excerpt`, `--artifact-path`, and `--transformations-json` when applicable. Integrity checks verify a referenced local artifact against the supplied hash; sanitized exports remove its local path.
 
 ## Evidence and belief revision
 
@@ -111,6 +120,33 @@ python pgra.py evaluation compare --programme <programme> --name <benchmark-name
 ```
 
 The runner calculates per-metric deltas, mean delta, wins/ties/losses, cost metadata, and whether conditions match. It does not manufacture scores or claim causality.
+
+Generate matched templates and a short rubric with:
+
+```bash
+python pgra.py evaluation template --directory .pgra/evaluation-case
+```
+
+Metric values must be between 0 and 1.
+
+## Projection integrity and recovery
+
+```bash
+python pgra.py projection status
+python pgra.py projection rebuild <programme>
+python pgra.py integrity
+```
+
+Every new authoritative event contains the complete post-command projection. Databases upgraded from 0.2 receive a one-time baseline event. Rebuild changes projection tables only; append-only events remain unchanged.
+
+## Backup and restore
+
+```bash
+python pgra.py backup create .pgra/backups/pgra.sqlite3
+python pgra.py backup restore .pgra/backups/pgra.sqlite3 --confirm-restore
+```
+
+Both operations use SQLite's backup API. Restore validates the input and creates a `.before-restore` safety backup first.
 
 ## Cross-process persistence verification
 

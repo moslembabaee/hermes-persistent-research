@@ -1,8 +1,8 @@
 # PGRA implementation plan
 
-## Implemented MVP status (0.2.0)
+## Implemented MVP status (0.3.0)
 
-The installable profile now includes the Phase 1 core, structured Phase 2 evidence storage, Phase 3 belief/experiment records, manual Phase 4 cycles/checkpoints, and a Phase 6 paired metric runner. Cross-process persistence is exercised by an automated test. Remaining hardening includes projection rebuild/repair, command-level idempotency on every public operation, richer budget enforcement, live Hermes tool adapters, meta-controller implementation, real benchmark datasets, and optional scheduling only after explicit opt-in.
+The installable profile now includes the Phase 1 core with projection drift detection/rebuild and SQLite-safe backup/restore, structured Phase 2 evidence storage with verifiable snapshot hashes, Phase 3 belief/experiment records with lifecycle guards, manual Phase 4 cycles/checkpoints with count-budget enforcement, and a Phase 6 paired metric comparator with normalized scores and templates. Cross-process persistence is exercised by an automated test. Remaining hardening includes command-level idempotency on every public operation, live metering of time/tokens/cost/tool calls, live Hermes tool adapters, leases/outbox, meta-controller implementation, real benchmark datasets, and optional scheduling only after explicit opt-in.
 
 The work is ordered so durable state and safety exist before autonomy. Every phase produces reviewable artifacts and must pass its exit gate before later behavior is trusted.
 

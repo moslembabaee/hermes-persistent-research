@@ -28,7 +28,9 @@ class EvidenceAndBeliefTests(unittest.TestCase):
 
     def add_source_snapshot(self, uri: str, title: str):
         source = self.service.add_source("evidence", uri, title, "primary")
-        snapshot = self.service.add_snapshot("evidence", source["source_id"], uri, locator="section 1")
+        snapshot = self.service.add_snapshot(
+            "evidence", source["source_id"], uri, locator="section 1", content_hash="a" * 64
+        )
         return source, snapshot
 
     def test_support_and_counterevidence_are_preserved_with_lineage(self) -> None:
@@ -39,12 +41,12 @@ class EvidenceAndBeliefTests(unittest.TestCase):
         )
         support = self.service.add_evidence(
             "evidence", snapshot_a["snapshot_id"], "supports", "Quality rose by 10%", "Supports the claim",
-            "study-lineage", claim_id=self.claim["claim_id"], hypothesis_id=self.hypothesis["hypothesis_id"],
+            source_a["source_id"], claim_id=self.claim["claim_id"], hypothesis_id=self.hypothesis["hypothesis_id"],
             quality={"directness": "high"}, verified=True,
         )
         counter = self.service.add_evidence(
             "evidence", snapshot_b["snapshot_id"], "contradicts", "Replication found no effect",
-            "Weakens the hypothesis", "study-lineage", hypothesis_id=self.hypothesis["hypothesis_id"],
+            "Weakens the hypothesis", source_a["source_id"], hypothesis_id=self.hypothesis["hypothesis_id"],
             limitations="Mirror shares an origin and is not independent",
         )
         state = self.service.get_programme("evidence")
@@ -53,10 +55,10 @@ class EvidenceAndBeliefTests(unittest.TestCase):
         self.assertEqual(support["lineage_group"], counter["lineage_group"])
 
     def test_belief_revision_requires_evidence_and_keeps_prior(self) -> None:
-        _, snapshot = self.add_source_snapshot("https://example.com/result", "Result")
+        source, snapshot = self.add_source_snapshot("https://example.com/result", "Result")
         evidence = self.service.add_evidence(
             "evidence", snapshot["snapshot_id"], "supports", "A controlled result", "Raises confidence",
-            "result-1", hypothesis_id=self.hypothesis["hypothesis_id"], verified=True,
+            source["source_id"], hypothesis_id=self.hypothesis["hypothesis_id"], verified=True,
         )
         with self.assertRaises(DomainError):
             self.service.revise_belief("evidence", self.hypothesis["hypothesis_id"], "likely", "No trigger", [])

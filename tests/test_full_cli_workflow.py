@@ -43,12 +43,13 @@ class FullCliWorkflowTests(unittest.TestCase):
             snapshot = self.run_cli(
                 db, "source", "snapshot", "full-cli", source["source_id"],
                 "--observed-uri", "https://example.com/primary", "--locator", "section-1",
+                "--content-hash", "a" * 64,
             )
             evidence = self.run_cli(
                 db, "evidence", "add", "full-cli", "--snapshot", snapshot["snapshot_id"],
                 "--claim", claim["claim_id"], "--hypothesis", hypothesis["hypothesis_id"],
                 "--stance", "supports", "--observation", "Stable source identity recorded",
-                "--interpretation", "Provenance is inspectable", "--lineage-group", "primary-1", "--verified",
+                "--interpretation", "Provenance is inspectable", "--lineage-group", source["source_id"], "--verified",
             )
             revision = self.run_cli(
                 db, "hypothesis", "revise", "full-cli", hypothesis["hypothesis_id"],
@@ -69,6 +70,33 @@ class FullCliWorkflowTests(unittest.TestCase):
             self.assertEqual(1, len(state["evidence"]))
             self.assertEqual(1, len(state["belief_revisions"]))
             self.assertEqual(1, len(state["evaluations"]))
+
+    def test_consumer_inspection_recovery_and_export_commands(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            db = root / "state.sqlite3"
+            self.run_cli(
+                db, "programme", "create", "--slug", "consumer", "--title", "Consumer",
+                "--objective", "Exercise consumer commands",
+            )
+            summary = self.run_cli(db, "programme", "summary", "consumer")
+            report_path = root / "report.md"
+            export_path = root / "export.json"
+            backup_path = root / "backup.sqlite3"
+            report = self.run_cli(db, "programme", "report", "consumer", "--output", str(report_path))
+            export = self.run_cli(db, "programme", "export", "consumer", "--output", str(export_path))
+            backup = self.run_cli(db, "backup", "create", str(backup_path))
+            projection = self.run_cli(db, "projection", "status")
+            doctor = self.run_cli(db, "doctor")
+            templates = self.run_cli(db, "evaluation", "template", "--directory", str(root / "evaluation"))
+
+            self.assertEqual("consumer", summary["slug"])
+            self.assertTrue(report_path.is_file())
+            self.assertTrue(export_path.is_file())
+            self.assertTrue(backup_path.is_file())
+            self.assertTrue(report["ok"] and export["sanitized"] and backup["ok"])
+            self.assertTrue(projection["ok"] and doctor["ok"])
+            self.assertEqual(3, len(templates["files"]))
 
 
 if __name__ == "__main__":

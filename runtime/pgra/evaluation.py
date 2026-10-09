@@ -35,6 +35,10 @@ def compare_runs(baseline: dict, pgra: dict) -> dict:
             raise ValueError(f"Baseline metric {name} must be numeric")
         if isinstance(pgra_value, bool) or not isinstance(pgra_value, Real):
             raise ValueError(f"PGRA metric {name} must be numeric")
+        if not 0 <= baseline_value <= 1:
+            raise ValueError(f"Baseline metric {name} must be between 0 and 1")
+        if not 0 <= pgra_value <= 1:
+            raise ValueError(f"PGRA metric {name} must be between 0 and 1")
         metrics[name] = {
             "baseline": float(baseline_value),
             "pgra": float(pgra_value),
@@ -62,4 +66,8 @@ def compare_runs(baseline: dict, pgra: dict) -> dict:
         "condition_mismatch": None
         if baseline.get("conditions") == pgra.get("conditions")
         else {"baseline": baseline.get("conditions"), "pgra": pgra.get("conditions")},
+        "limitations": {
+            "baseline": baseline.get("limitations", []),
+            "pgra": pgra.get("limitations", []),
+        },
     }

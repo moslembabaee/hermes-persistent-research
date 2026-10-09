@@ -13,6 +13,10 @@ secrets.*
 data/
 runs/
 research-state/
+backups/
+exports/
+reports/
+evaluation-case/
 *.sqlite
 *.sqlite3
 *.db

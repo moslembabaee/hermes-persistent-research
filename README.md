@@ -1,142 +1,150 @@
 # Hermes Persistent General Research Agent (PGRA)
 
-PGRA is a design and implementation handoff for a persistent general research agent built on [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent), with [AlekseiUL/hermes-researcher-agent](https://github.com/AlekseiUL/hermes-researcher-agent) used as a reference for privacy-safe public-source research, evidence grading, source-lineage checks, counterexample search, and reproducible research artifacts.
+[![Profile distribution quality](https://github.com/moslembabaee/hermes-persistent-research/actions/workflows/profile-distribution.yml/badge.svg)](https://github.com/moslembabaee/hermes-persistent-research/actions/workflows/profile-distribution.yml)
 
-The central idea is simple: a **research programme is a durable, inspectable unit of work**. It is not a long chat transcript. A programme owns questions, hypotheses, evidence and provenance, counterevidence, experiments, belief revisions, open uncertainties, budgets, checkpoints, and an event history. Conversations may start or inspect work, but they are not the system of record.
+PGRA is an installable, isolated [Hermes Agent](https://github.com/NousResearch/hermes-agent) profile for research that must survive beyond one chat. Its durable unit is a **research programme** containing hypotheses, claims, source snapshots, evidence and counterevidence, experiments, belief revisions, bounded cycles, checkpoints, and evaluations.
 
-This repository is an **installable Hermes PGRA MVP plus a design and implementation handoff**. Version `0.2.0` ships a standard-library Python runtime with SQLite migrations, an append-only event log, programme/cycle/checkpoint CLI, provenance-aware evidence and lineage, explicit belief revision, experiment authorization, paired evaluation, and a real cross-process persistence test.
+Version `0.3.0` is a local-first MVP. SQLite is the only required state service. PGRA does not install a scheduler, modify the Hermes default profile, or require Obsidian, Hindsight, PostgreSQL, or a vector database.
 
-The MVP persists and audits research state; it does not autonomously browse, schedule itself, or prove research quality. Hermes tools perform collection under user authority, and the PGRA CLI stores the structured results. Scheduling and Hermes chat/user memory are disabled by default so SQLite remains the explicit system of record.
+## What is implemented
 
-## Install as an independent Hermes profile
+- checksum-verified SQLite migrations and foreign-key enforcement;
+- append-only events with a complete projection snapshot for drift detection and repair;
+- programme, hypothesis, claim, source, evidence, lineage, experiment, cycle, and checkpoint commands;
+- verifiable source snapshots with required locator and SHA-256 hash for available content;
+- explicit, evidence-triggered belief revision history;
+- programme and cycle count budgets for sources, evidence, experiments, and cycles;
+- valid programme and experiment lifecycle transitions;
+- human-readable summaries and Markdown reports;
+- sanitized JSON export and SQLite-safe backup/restore;
+- normalized paired evaluation comparison and starter rubric;
+- real cross-process persistence tests.
 
-The distribution manifest names the profile `pgra`, contains no credentials, ships no cron jobs, and does not target the built-in default profile.
+Hermes integration is currently **instruction-driven**: the bundled profile and skill tell Hermes how to call the PGRA CLI. There is not yet an automatic hook that records every Hermes action. The CLI and SQLite database remain authoritative.
 
-```bash
+## Requirements
+
+- Hermes Agent `0.21.6` or newer;
+- Python `3.10` or newer;
+- Git for URL-based profile installation.
+
+The runtime uses only the Python standard library.
+
+## Install the isolated profile
+
+```text
 hermes profile install github.com/moslembabaee/hermes-persistent-research --name pgra --alias
 hermes profile show pgra
 hermes profile info pgra
 hermes -p pgra setup
+```
+
+The install preview should show profile name `pgra` and no cron payload. `setup` configures your own model provider locally. This repository contains no credentials.
+
+Start Hermes with the isolated profile:
+
+```text
 hermes -p pgra chat
 ```
 
-Review the install plan before confirming. `setup` is where you configure your own provider and optional tools locally; credentials are never supplied by this repository. If your Hermes release does not have `profile install`, update Hermes and inspect `hermes profile install --help` before proceeding.
+## First successful programme
 
-For local development from a clone:
+Use `hermes profile info pgra` to locate the installed profile directory, change into that directory, then run the following commands. Every command below is a single line and works in PowerShell, Command Prompt, Bash, and zsh.
 
-```bash
-hermes profile install /path/to/hermes-persistent-research --name pgra-dev
-hermes -p pgra-dev chat
-```
-
-Installation provides `SOUL.md`, safe `config.yaml`, the `pgra-research` skill, design documents, runtime, migrations, CLI, and tests. It never creates a schedule.
-
-## Initialize and verify the runtime
-
-From the installed profile root:
-
-```bash
+```text
+python pgra.py doctor
 python pgra.py init
+python pgra.py programme create --slug vendor-choice --title "Vendor choice" --objective "Choose a vendor using provenance-aware evidence"
+python pgra.py cycle start vendor-choice --objective "Collect primary pricing and security evidence" --stop-conditions "Stop after five sources or a material access barrier"
+python pgra.py programme summary vendor-choice
+```
+
+For budget and policy JSON, single-quoted JSON works in PowerShell, Bash, and zsh. Command Prompt has different quoting rules; use a PowerShell terminal on Windows for those arguments. For complex policies, constructing JSON with `ConvertTo-Json` is safer. You may also avoid shell quoting by invoking the commands from Hermes chat through the bundled skill.
+
+State defaults to `.pgra/pgra.sqlite3` inside the installed PGRA profile, derived from the runtime location rather than the process working directory or global Hermes home. This keeps multiple profiles isolated. Override it with `PGRA_DB` or the global `--db PATH` option.
+
+## Capture evidence
+
+An available source snapshot requires an exact locator and a SHA-256 content hash. A short excerpt or a local artifact path may also be recorded; local artifacts remain private and are removed from sanitized exports.
+
+```text
+python pgra.py source add vendor-choice --uri https://example.com/report --title "Primary report" --type primary
+python pgra.py source snapshot vendor-choice SOURCE_ID --observed-uri https://example.com/report --locator "section 2" --content-hash SHA256_HEX --access-method browser --excerpt "Short permitted excerpt"
+python pgra.py evidence add vendor-choice --snapshot SNAPSHOT_ID --hypothesis HYPOTHESIS_ID --stance supports --observation "Observed fact" --interpretation "Why it matters" --lineage-group ORIGINAL_SOURCE_ID --verified
+```
+
+Use IDs returned by the CLI; do not guess them. See [the complete CLI reference](docs/CLI_REFERENCE.md).
+
+## Inspect, report, and export
+
+```text
+python pgra.py programme summary vendor-choice
+python pgra.py hypothesis list vendor-choice
+python pgra.py evidence list vendor-choice
+python pgra.py programme report vendor-choice --output .pgra/exports/report.md
+python pgra.py programme export vendor-choice --output .pgra/exports/export.json
 python pgra.py integrity
-python -m unittest discover -s tests -p "test_*.py"
+python pgra.py projection status
 ```
 
-By default, state is stored at `$HERMES_HOME/pgra/pgra.sqlite3`. You may set `PGRA_DB` or pass `--db` for a specific database. The database and its SQLite sidecars are ignored by Git.
+`programme export` is deliberately sanitized: it omits event payloads and local artifact paths. It is not a substitute for reviewing the output before publishing it.
 
-Create and resume a programme:
+## Backup and recovery
 
-```bash
-python pgra.py programme create \
-  --slug vendor-choice \
-  --title "Vendor choice" \
-  --objective "Choose a vendor using provenance-aware evidence"
+Never copy a live SQLite file directly. Use SQLite's online backup API through the CLI:
 
-python pgra.py cycle start vendor-choice \
-  --objective "Collect primary pricing and security evidence" \
-  --budget-json '{"max_sources":5,"max_minutes":30}'
-
-python pgra.py programme show vendor-choice
+```text
+python pgra.py backup create .pgra/backups/pgra-2026-10-09.sqlite3
+python pgra.py backup restore .pgra/backups/pgra-2026-10-09.sqlite3 --confirm-restore
 ```
 
-Run `python pgra.py --help` for evidence, lineage, hypothesis revision, experiments, checkpoints, status changes, and evaluation commands. See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for the complete workflow.
+Restore validates the source and creates a `.before-restore` safety backup of the current database. See [backup and recovery](docs/BACKUP_AND_RECOVERY.md).
 
-### Included runtime capabilities
+## Paired evaluation
 
-| Capability | Included in 0.2.0 |
-| --- | --- |
-| SQLite state engine and checksum-verified migration | Yes |
-| Append-only event stream and integrity check | Yes |
-| Programme/cycle/checkpoint CLI | Yes |
-| Cross-process persistence test | Yes |
-| Sources, snapshots, lineage, claims, and evidence | Yes |
-| Evidence-triggered belief revision history | Yes |
-| Explicitly authorized experiment records | Yes |
-| Paired metric evaluation runner | Yes |
-| Autonomous web collection | No; Hermes tools collect under user control |
-| Cron/background scheduling | No; deliberately absent |
+Generate comparable input templates and a rubric:
 
-## Design commitments
+```text
+python pgra.py evaluation template --directory .pgra/evaluation-case
+python pgra.py evaluation compare --programme vendor-choice --name vendor-choice-v1 --baseline .pgra/evaluation-case/baseline.json --pgra .pgra/evaluation-case/pgra.json
+```
 
-- SQLite is the first system of record, with an append-only event log and rebuildable projections.
-- Every important claim has traceable evidence and source lineage; copied reports do not become independent confirmation.
-- Counterevidence and disconfirming tests are first-class objects.
-- Beliefs change through explicit revisions, never by silently overwriting an earlier assessment.
-- Experiments are bounded by objective, budget, permissions, stop conditions, and expected outputs.
-- Persistence works across process and conversation boundaries without relying on chat history.
-- Autonomous cycles are bounded. Scheduling is disabled unless the user explicitly opts in.
-- The Hermes default profile is never modified. PGRA lives in a separate profile named `pgra`.
-- Secrets, credentials, private memories, sessions, cookies, local databases, and private research state must never enter this public repository.
-- Quality is measured against a one-shot baseline, including factual quality, calibration, provenance, counterevidence, durability, cost, and time.
+Scores must be between 0 and 1 and use identical metric keys. The comparator does not invent scores or claim causality; reviewers must record conditions, costs, evidence, and limitations.
 
-## Repository map
+## Verify the installation
 
-| File | Purpose |
-| --- | --- |
-| [`docs/PGRA_DESIGN.md`](docs/PGRA_DESIGN.md) | Full product and technical design, domain model, persistence model, safety model, and evaluation strategy |
-| [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) | Ordered delivery plan beginning with the SQLite Research State Engine |
-| [`docs/HERMES_DEFAULT_PROMPT.md`](docs/HERMES_DEFAULT_PROMPT.md) | Paste-ready prompt for handing implementation to Hermes safely |
-| [`docs/HANDOFF_BRIEF.md`](docs/HANDOFF_BRIEF.md) | Self-contained handoff summary with phases and acceptance tests |
-| [`AGENTS.md`](AGENTS.md) | Non-negotiable rules for coding agents and maintainers |
-
-## Intended operator flow
-
-1. Install or identify the target Hermes Agent version.
-2. Read this entire repository and inspect the actual CLI, profile layout, extension points, and security behavior.
-3. Propose a version-specific plan and request approval for risky or destructive operations.
-4. Create an isolated `pgra` profile without changing the default profile.
-5. Implement the state engine and tests before adding autonomous behavior.
-6. Run a programme manually and prove that another process or session can resume it from SQLite.
-7. Evaluate the persistent run against the same task executed as a one-shot baseline.
-8. Enable a scheduler only after explicit user opt-in and only with bounded budgets and a kill switch.
-
-## Non-goals
-
-PGRA is not:
-
-- a hidden always-on daemon;
-- an excuse to scrape private or login-gated data;
-- a replacement for primary sources or human judgment;
-- a system that treats model confidence as evidence;
-- a memory dump of every conversation;
-- an unbounded recursive agent loop;
-- a modification of the user's existing Hermes default profile;
-- a repository for credentials or private research data.
-
-## Current status
-
-Profile packaging and isolated sandbox installation are verified against Hermes Agent `v0.21.6`. Runtime unit tests and a real two-process persistence test are included. The MVP does not yet include autonomous Hermes tool adapters, projection rebuild/repair, a scheduler, or published real-world benchmark results.
-
-Run the repository audit locally:
-
-```bash
+```text
 python scripts/audit_public_distribution.py
 python -m unittest discover -s scripts -p "test_*.py"
-python -m unittest discover -s tests -p "test_*.py"
+python -W error::ResourceWarning -m unittest discover -s tests -p "test_*.py"
 ```
 
-## Upstream references
+## Safety defaults
 
-- [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)
-- [AlekseiUL/hermes-researcher-agent](https://github.com/AlekseiUL/hermes-researcher-agent)
+- The Hermes default profile is never a target.
+- No cron job, scheduled task, watcher, or service is shipped.
+- SQLite is the explicit system of record; Hermes chat memory is disabled in this profile.
+- Secrets, sessions, cookies, local databases, artifacts, exports, and private research state are ignored by Git.
+- Experiments require explicit authorization and cannot be completed twice.
+- Completed or cancelled programmes cannot silently become active again.
 
-Upstream projects evolve. Before implementation, record the tested commit/version and inspect the actual CLI rather than copying commands from this document as if they were stable APIs.
+## Known limitations
+
+- Hermes tool actions are not automatically captured; Hermes must intentionally call the CLI.
+- Budgets are enforced for stored cycles, sources, evidence, and experiments, but model tokens, wall time, bytes, tool calls, and monetary cost are not yet metered by a live Hermes adapter.
+- Projection snapshots make rebuild and drift repair reliable but increase event-log size; a compact reducer is future work.
+- Source excerpts and artifact references are supported, but PGRA is not a web archiver.
+- The evaluation component validates and compares reviewer-provided measurements; it does not run models or grade answers automatically.
+- Command-level idempotency keys, leases, a meta-controller, and opt-in scheduling are not implemented.
+
+## Repository guide
+
+- [Complete design](docs/PGRA_DESIGN.md)
+- [Implementation plan](docs/IMPLEMENTATION_PLAN.md)
+- [Consumer hardening plan](docs/CONSUMER_HARDENING_PLAN.md)
+- [Self-contained handoff](docs/HANDOFF_BRIEF.md)
+- [Hermes implementation prompt](docs/HERMES_DEFAULT_PROMPT.md)
+- [CLI reference](docs/CLI_REFERENCE.md)
+- [Changelog](CHANGELOG.md)
+
+The public package is available under the [MIT License](LICENSE). Upstream references are [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent) and [AlekseiUL/hermes-researcher-agent](https://github.com/AlekseiUL/hermes-researcher-agent).

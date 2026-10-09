@@ -1,7 +1,7 @@
 ---
 name: pgra-research
 description: Use when creating, implementing, running, resuming, auditing, or evaluating a persistent research programme with hypotheses, provenance-aware evidence, source lineage, counterevidence, experiments, belief revision, and bounded cycles.
-version: 0.2.0
+version: 0.3.0
 author: moslembabaee
 metadata:
   hermes:
@@ -14,7 +14,7 @@ metadata:
 
 Use this skill to build or operate the PGRA design in this distribution. The durable unit is a research programme, not a conversation. SQLite with an append-only event log is the intended system of record.
 
-This distribution includes the runtime under `runtime/pgra`, migrations under `runtime/pgra/migrations`, and the cross-platform entry point `pgra.py`. State defaults to `$HERMES_HOME/pgra/pgra.sqlite3`. Confirm availability with `python pgra.py integrity`; do not substitute chat memory if the runtime is unavailable.
+This distribution includes the runtime under `runtime/pgra`, migrations under `runtime/pgra/migrations`, and the cross-platform entry point `pgra.py`. State defaults to `.pgra/pgra.sqlite3` under this profile root. Confirm availability with `python pgra.py integrity`; do not substitute chat memory if the runtime is unavailable.
 
 ## CLI contract
 
@@ -30,10 +30,13 @@ python pgra.py cycle start <programme> --objective <objective>
 python pgra.py cycle checkpoint <programme> --cycle <id> --summary-json <json>
 python pgra.py hypothesis add <programme> --statement <text> --assessment <label> --falsifier <text>
 python pgra.py source add <programme> --uri <url> --title <title> --type <type>
-python pgra.py source snapshot <programme> <source-id> --observed-uri <url>
+python pgra.py source snapshot <programme> <source-id> --observed-uri <url> --locator <locator> --content-hash <sha256>
 python pgra.py evidence add <programme> --snapshot <id> --hypothesis <id> --stance <stance> ...
 python pgra.py hypothesis revise <programme> <hypothesis-id> --assessment <label> --reasoning <text> --evidence <ids>
 python pgra.py evaluation compare --programme <programme> --name <name> --baseline <json-file> --pgra <json-file>
+python pgra.py programme summary <programme>
+python pgra.py projection status
+python pgra.py backup create <backup-path>
 ```
 
 CLI output is JSON. Capture returned IDs; never guess them.

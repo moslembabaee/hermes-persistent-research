@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from audit_public_distribution import audit, validate_env_example, validate_manifest
+from audit_public_distribution import audit, validate_env_example, validate_manifest, validate_version_consistency
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -33,6 +33,9 @@ class DistributionAuditTests(unittest.TestCase):
             errors = validate_env_example(root)
             self.assertEqual(1, len(errors))
             self.assertIn("must not contain a value", errors[0])
+
+    def test_distribution_runtime_and_skill_versions_match(self) -> None:
+        self.assertEqual([], validate_version_consistency(REPO_ROOT))
 
 
 if __name__ == "__main__":
