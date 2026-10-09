@@ -1,0 +1,51 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.*
+secrets.*
+
+# PGRA private/local runtime state
+.pgra/
+data/
+runs/
+research-state/
+*.sqlite
+*.sqlite3
+*.db
+*.db-wal
+*.db-shm
+*.db-journal
+*.log
+
+# Hermes/user state must never be vendored
+.hermes/
+sessions/
+memories/
+cookies/
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+
+# Node and editors
+node_modules/
+.idea/
+.vscode/
+*.swp
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
