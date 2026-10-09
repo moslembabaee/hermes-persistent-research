@@ -1,7 +1,7 @@
 ---
 name: pgra-research
 description: Use when creating, implementing, running, resuming, auditing, or evaluating a persistent research programme with hypotheses, provenance-aware evidence, source lineage, counterevidence, experiments, belief revision, and bounded cycles.
-version: 0.1.0
+version: 0.2.0
 author: moslembabaee
 metadata:
   hermes:
@@ -14,7 +14,29 @@ metadata:
 
 Use this skill to build or operate the PGRA design in this distribution. The durable unit is a research programme, not a conversation. SQLite with an append-only event log is the intended system of record.
 
-This skill does not imply that the runtime exists. First determine whether the current repository contains working migrations, state-engine code, tests, and a verified Hermes adapter. If it contains only the design distribution, enter implementation-planning mode and state that persistence is not yet implemented.
+This distribution includes the runtime under `runtime/pgra`, migrations under `runtime/pgra/migrations`, and the cross-platform entry point `pgra.py`. State defaults to `$HERMES_HOME/pgra/pgra.sqlite3`. Confirm availability with `python pgra.py integrity`; do not substitute chat memory if the runtime is unavailable.
+
+## CLI contract
+
+Use `python pgra.py --help` for the live command surface. Core operations are:
+
+```text
+python pgra.py init
+python pgra.py integrity
+python pgra.py programme create --slug <slug> --title <title> --objective <objective>
+python pgra.py programme list
+python pgra.py programme show <slug-or-id>
+python pgra.py cycle start <programme> --objective <objective>
+python pgra.py cycle checkpoint <programme> --cycle <id> --summary-json <json>
+python pgra.py hypothesis add <programme> --statement <text> --assessment <label> --falsifier <text>
+python pgra.py source add <programme> --uri <url> --title <title> --type <type>
+python pgra.py source snapshot <programme> <source-id> --observed-uri <url>
+python pgra.py evidence add <programme> --snapshot <id> --hypothesis <id> --stance <stance> ...
+python pgra.py hypothesis revise <programme> <hypothesis-id> --assessment <label> --reasoning <text> --evidence <ids>
+python pgra.py evaluation compare --programme <programme> --name <name> --baseline <json-file> --pgra <json-file>
+```
+
+CLI output is JSON. Capture returned IDs; never guess them.
 
 ## Required reading
 
@@ -44,7 +66,7 @@ Use when the user asks to build or extend PGRA.
 
 ### Run one cycle
 
-Use only when a functioning state engine is present.
+Use after `integrity` confirms a functioning state engine.
 
 1. Load the programme and last committed checkpoint from SQLite.
 2. Validate status, lease, frozen policy, permissions, budgets, and stop conditions.

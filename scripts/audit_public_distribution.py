@@ -22,6 +22,19 @@ REQUIRED_FILES = {
     "docs/IMPLEMENTATION_PLAN.md",
     "docs/HERMES_DEFAULT_PROMPT.md",
     "docs/HANDOFF_BRIEF.md",
+    "docs/CLI_REFERENCE.md",
+    "runtime/pgra/__init__.py",
+    "runtime/pgra/db.py",
+    "runtime/pgra/service.py",
+    "runtime/pgra/evaluation.py",
+    "runtime/pgra/cli.py",
+    "runtime/pgra/migrations/001_initial.sql",
+    "pgra.py",
+    "tests/test_cross_session_cli.py",
+    "tests/test_state_engine.py",
+    "tests/test_evidence_and_beliefs.py",
+    "tests/test_evaluation.py",
+    "tests/test_full_cli_workflow.py",
 }
 
 REQUIRED_OWNED = {
@@ -31,6 +44,18 @@ REQUIRED_OWNED = {
     ".env.EXAMPLE",
     "skills",
     "docs",
+    "runtime/pgra/__init__.py",
+    "runtime/pgra/cli.py",
+    "runtime/pgra/db.py",
+    "runtime/pgra/evaluation.py",
+    "runtime/pgra/service.py",
+    "runtime/pgra/migrations/001_initial.sql",
+    "pgra.py",
+    "tests/test_cross_session_cli.py",
+    "tests/test_evaluation.py",
+    "tests/test_evidence_and_beliefs.py",
+    "tests/test_state_engine.py",
+    "tests/test_full_cli_workflow.py",
 }
 
 PRIVATE_PARTS = {".pgra", ".hermes", "sessions", "memories", "cookies", "data", "runs", "research-state"}

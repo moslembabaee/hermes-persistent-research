@@ -4,7 +4,9 @@ PGRA is a design and implementation handoff for a persistent general research ag
 
 The central idea is simple: a **research programme is a durable, inspectable unit of work**. It is not a long chat transcript. A programme owns questions, hypotheses, evidence and provenance, counterevidence, experiments, belief revisions, open uncertainties, budgets, checkpoints, and an event history. Conversations may start or inspect work, but they are not the system of record.
 
-This repository is an **installable Hermes starter profile plus a design and implementation handoff**. The profile packaging has been verified with Hermes Agent `v0.21.6`; the SQLite persistence runtime described in the design is not implemented yet. The profile is intentionally truthful about that boundary.
+This repository is an **installable Hermes PGRA MVP plus a design and implementation handoff**. Version `0.2.0` ships a standard-library Python runtime with SQLite migrations, an append-only event log, programme/cycle/checkpoint CLI, provenance-aware evidence and lineage, explicit belief revision, experiment authorization, paired evaluation, and a real cross-process persistence test.
+
+The MVP persists and audits research state; it does not autonomously browse, schedule itself, or prove research quality. Hermes tools perform collection under user authority, and the PGRA CLI stores the structured results. Scheduling and Hermes chat/user memory are disabled by default so SQLite remains the explicit system of record.
 
 ## Install as an independent Hermes profile
 
@@ -27,7 +29,51 @@ hermes profile install /path/to/hermes-persistent-research --name pgra-dev
 hermes -p pgra-dev chat
 ```
 
-Installation provides `SOUL.md`, safe starter `config.yaml`, the `pgra-research` skill, the design documents, and agent instructions. It does **not** create the SQLite engine, schedule background work, or prove cross-session persistence. Use the implementation plan to build and verify those capabilities.
+Installation provides `SOUL.md`, safe `config.yaml`, the `pgra-research` skill, design documents, runtime, migrations, CLI, and tests. It never creates a schedule.
+
+## Initialize and verify the runtime
+
+From the installed profile root:
+
+```bash
+python pgra.py init
+python pgra.py integrity
+python -m unittest discover -s tests -p "test_*.py"
+```
+
+By default, state is stored at `$HERMES_HOME/pgra/pgra.sqlite3`. You may set `PGRA_DB` or pass `--db` for a specific database. The database and its SQLite sidecars are ignored by Git.
+
+Create and resume a programme:
+
+```bash
+python pgra.py programme create \
+  --slug vendor-choice \
+  --title "Vendor choice" \
+  --objective "Choose a vendor using provenance-aware evidence"
+
+python pgra.py cycle start vendor-choice \
+  --objective "Collect primary pricing and security evidence" \
+  --budget-json '{"max_sources":5,"max_minutes":30}'
+
+python pgra.py programme show vendor-choice
+```
+
+Run `python pgra.py --help` for evidence, lineage, hypothesis revision, experiments, checkpoints, status changes, and evaluation commands. See [`docs/CLI_REFERENCE.md`](docs/CLI_REFERENCE.md) for the complete workflow.
+
+### Included runtime capabilities
+
+| Capability | Included in 0.2.0 |
+| --- | --- |
+| SQLite state engine and checksum-verified migration | Yes |
+| Append-only event stream and integrity check | Yes |
+| Programme/cycle/checkpoint CLI | Yes |
+| Cross-process persistence test | Yes |
+| Sources, snapshots, lineage, claims, and evidence | Yes |
+| Evidence-triggered belief revision history | Yes |
+| Explicitly authorized experiment records | Yes |
+| Paired metric evaluation runner | Yes |
+| Autonomous web collection | No; Hermes tools collect under user control |
+| Cron/background scheduling | No; deliberately absent |
 
 ## Design commitments
 
@@ -78,13 +124,14 @@ PGRA is not:
 
 ## Current status
 
-Profile distribution packaging and isolated sandbox installation are verified against Hermes Agent `v0.21.6`. The complete design and implementation handoff are included. SQLite runtime behavior, end-to-end Hermes tool adapters, cross-session programme persistence, optional scheduling, and paired evaluation results remain to be implemented and verified.
+Profile packaging and isolated sandbox installation are verified against Hermes Agent `v0.21.6`. Runtime unit tests and a real two-process persistence test are included. The MVP does not yet include autonomous Hermes tool adapters, projection rebuild/repair, a scheduler, or published real-world benchmark results.
 
 Run the repository audit locally:
 
 ```bash
 python scripts/audit_public_distribution.py
 python -m unittest discover -s scripts -p "test_*.py"
+python -m unittest discover -s tests -p "test_*.py"
 ```
 
 ## Upstream references

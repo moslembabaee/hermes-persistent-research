@@ -1,12 +1,25 @@
 name: pgra
-version: 0.1.0
-description: "A safe starter profile and implementation handoff for a persistent, provenance-aware general research agent built on Hermes Agent."
+version: 0.2.0
+description: "An isolated Hermes profile with a SQLite research state engine, programme CLI, evidence lineage, belief revision, bounded cycles, and paired evaluation."
 hermes_requires: ">=0.21.6"
 author: "moslembabaee"
 distribution_owned:
+  - README.md
   - AGENTS.md
   - SOUL.md
   - config.yaml
   - .env.EXAMPLE
   - skills
   - docs
+  - runtime/pgra/__init__.py
+  - runtime/pgra/cli.py
+  - runtime/pgra/db.py
+  - runtime/pgra/evaluation.py
+  - runtime/pgra/service.py
+  - runtime/pgra/migrations/001_initial.sql
+  - pgra.py
+  - tests/test_cross_session_cli.py
+  - tests/test_evaluation.py
+  - tests/test_evidence_and_beliefs.py
+  - tests/test_state_engine.py
+  - tests/test_full_cli_workflow.py

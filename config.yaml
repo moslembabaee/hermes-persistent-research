@@ -7,8 +7,10 @@ agent:
   max_turns: 60
   tool_use_enforcement: true
 memory:
-  memory_enabled: true
-  user_profile_enabled: true
+  # SQLite is the PGRA system of record. Enable Hermes memory later only for
+  # stable user preferences, never as a substitute for programme state.
+  memory_enabled: false
+  user_profile_enabled: false
 tools:
   # Capability preferences only. Actual availability and permission depend on the
   # installed Hermes version and the user's local setup.
@@ -19,8 +21,6 @@ tools:
     - file
     - code_execution
     - skills
-    - memory
-    - session_search
     - todo
     - clarify
 security:
