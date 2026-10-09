@@ -1,0 +1,21 @@
+name: Profile distribution quality
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Audit public profile distribution
+        run: python scripts/audit_public_distribution.py
+      - name: Run audit tests
+        run: python -m unittest discover -s scripts -p "test_*.py"

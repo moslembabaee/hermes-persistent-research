@@ -1,0 +1,27 @@
+# Safe starter configuration for the isolated `pgra` profile.
+# Provider credentials and model selection remain user-owned local configuration.
+model:
+  provider: auto
+  default: auto
+agent:
+  max_turns: 60
+  tool_use_enforcement: true
+memory:
+  memory_enabled: true
+  user_profile_enabled: true
+tools:
+  # Capability preferences only. Actual availability and permission depend on the
+  # installed Hermes version and the user's local setup.
+  preferred_toolsets:
+    - web
+    - browser
+    - terminal
+    - file
+    - code_execution
+    - skills
+    - memory
+    - session_search
+    - todo
+    - clarify
+security:
+  redact_secrets: true

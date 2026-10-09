@@ -1,0 +1,12 @@
+name: pgra
+version: 0.1.0
+description: "A safe starter profile and implementation handoff for a persistent, provenance-aware general research agent built on Hermes Agent."
+hermes_requires: ">=0.21.6"
+author: "moslembabaee"
+distribution_owned:
+  - AGENTS.md
+  - SOUL.md
+  - config.yaml
+  - .env.EXAMPLE
+  - skills
+  - docs

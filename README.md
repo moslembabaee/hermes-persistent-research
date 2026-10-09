@@ -4,7 +4,30 @@ PGRA is a design and implementation handoff for a persistent general research ag
 
 The central idea is simple: a **research programme is a durable, inspectable unit of work**. It is not a long chat transcript. A programme owns questions, hypotheses, evidence and provenance, counterevidence, experiments, belief revisions, open uncertainties, budgets, checkpoints, and an event history. Conversations may start or inspect work, but they are not the system of record.
 
-This repository is currently a **design and handoff package**, not a production implementation. It intentionally avoids claiming Hermes APIs or installation commands that have not been verified against the target Hermes version.
+This repository is an **installable Hermes starter profile plus a design and implementation handoff**. The profile packaging has been verified with Hermes Agent `v0.21.6`; the SQLite persistence runtime described in the design is not implemented yet. The profile is intentionally truthful about that boundary.
+
+## Install as an independent Hermes profile
+
+The distribution manifest names the profile `pgra`, contains no credentials, ships no cron jobs, and does not target the built-in default profile.
+
+```bash
+hermes profile install github.com/moslembabaee/hermes-persistent-research --name pgra --alias
+hermes profile show pgra
+hermes profile info pgra
+hermes -p pgra setup
+hermes -p pgra chat
+```
+
+Review the install plan before confirming. `setup` is where you configure your own provider and optional tools locally; credentials are never supplied by this repository. If your Hermes release does not have `profile install`, update Hermes and inspect `hermes profile install --help` before proceeding.
+
+For local development from a clone:
+
+```bash
+hermes profile install /path/to/hermes-persistent-research --name pgra-dev
+hermes -p pgra-dev chat
+```
+
+Installation provides `SOUL.md`, safe starter `config.yaml`, the `pgra-research` skill, the design documents, and agent instructions. It does **not** create the SQLite engine, schedule background work, or prove cross-session persistence. Use the implementation plan to build and verify those capabilities.
 
 ## Design commitments
 
@@ -55,7 +78,14 @@ PGRA is not:
 
 ## Current status
 
-Design complete for implementation handoff. Runtime behavior, Hermes integration commands, cross-session persistence, and evaluation results remain to be implemented and verified on the target installation.
+Profile distribution packaging and isolated sandbox installation are verified against Hermes Agent `v0.21.6`. The complete design and implementation handoff are included. SQLite runtime behavior, end-to-end Hermes tool adapters, cross-session programme persistence, optional scheduling, and paired evaluation results remain to be implemented and verified.
+
+Run the repository audit locally:
+
+```bash
+python scripts/audit_public_distribution.py
+python -m unittest discover -s scripts -p "test_*.py"
+```
 
 ## Upstream references
 
